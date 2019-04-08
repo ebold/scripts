@@ -1,0 +1,20 @@
+#!/bin/bash -e
+
+# rc.local
+
+# Place this file in the /etc directory.
+# This script is executed at the end of each multiuser runlevel.
+# Make sure that the script will "exit 0" on success or any other value on error.
+
+# Instructions for resetting the trigger mode of both usr0 and usr2 LEDs are
+# tested on the Beaglebone Black board with following OS:
+# - Linux raspbx 3.14.37-ti-r57 #1 SMP PREEMPT Sat Apr 4 06:18:14 UTC 2015 armv7l armv7l armv7l GNU/Linux
+
+# Stop heartbeat on LED usr0
+echo "none" > /sys/class/leds/beaglebone\:green\:usr0/trigger
+
+# Stop cpu0 on LED usr2
+echo "none" > /sys/class/leds/beaglebone\:green\:usr2/trigger
+
+exit 0
+
