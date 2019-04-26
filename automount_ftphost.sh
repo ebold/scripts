@@ -17,6 +17,11 @@
 # change permission: sudo chmod +x /etc/profile.d/automount_ftphost.sh
 # add fuse to usergroup: sudo /usr/sbin/groupadd fuse
 
+# Issue #2: Error connecting to ftp: Server denied you to change to the given directory
+# - Cause: User "kids" has access (read, write) rights to an NAS storage location "Generic-FlashDisk-00". This location
+#          is an external USB-Flash connected to FB 6490. The FTP access to the location is enabled in the NAS configuration.
+# - Fix: Specify the host IP address to mount the NAS location (not the full path with the location name)
+
 MOUNT_POINT=~/f
 HOST_IP=192.168.1.1
 FTP_HOST=$HOST_IP:/Generic-FlashDisk-00/
@@ -35,7 +40,7 @@ if [ $? == 0 ]; then
 	mountpoint $MOUNT_POINT > /dev/null
 
 	if [ $? != 0 ]; then
-		curlftpfs -o $FUSE_OPTIONS kids@$FTP_HOST $MOUNT_POINT
+		curlftpfs -o $FUSE_OPTIONS kids@$HOST_IP $MOUNT_POINT
 	fi
 else
 	mountpoint $MOUNT_POINT > /dev/null
