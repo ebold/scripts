@@ -1,6 +1,8 @@
 #!/bin/bash
 
-# Send TR monitoring data to a Graphite server
+# This is an optional script to present the monitoring data in graphs.
+# If monitoring data prepared by timing receivers is available it sends the data
+# to a Graphite host using the UDP protocol.
 
 # Check argument
 if [ $# -ne 1 ]; then
@@ -8,12 +10,13 @@ if [ $# -ne 1 ]; then
 	exit 1
 fi
 
-# Graphite server IP address and port
+# Graphite host IP address and port
 SERVERIP=$1
 SERVERPORT=2003
 
 # snooper name (used as metric path)
-TRNOMEN=ZT00ZM0
+TR1=ZT00ZM01
+TR2=ZT00ZM02
 
 # directory with monitoring data
 MONDATA=/common/usr/timing/htdocs/cgi-bin/admin/data
@@ -28,31 +31,75 @@ ACTIONN=actionn
 # collect interval
 INTERVAL=30
 
+# arrays with monitoring data files and metric key
+IDX=0
+MONDATA_FILES=()
+MONDATA_DIR=$MONDATA/$TRDATA
+
+# check if file with monitoring data exists
+for i in `seq 1 2`; do
+
+	# check if file with monitoring data exists
+	if [ -f $MONDATA_DIR/$i/$LATEN ]; then
+		# add file path to a corresponding array
+		MONDATA_FILES[IDX]=$MONDATA_DIR/$i/$LATEN
+	else
+		echo "File not found: $MONDATA_DIR/$i/$LATEN"
+	fi
+
+	IDX=`expr $IDX + 1`
+
+	if [ -f $MONDATA_DIR/$i/$EARLYN ]; then
+		MONDATA_FILES[IDX]=$MONDATA_DIR/$i/$EARLYN
+	else
+		echo "File not found: $MONDATA_DIR/$i/$EARLYN"
+	fi
+
+	IDX=`expr $IDX + 1`
+
+	if [ -f $MONDATA_DIR/$i/$OVERFLOWN ]; then
+		MONDATA_FILES[IDX]=$MONDATA_DIR/$i/$OVERFLOWN
+	else
+		echo "File not found: $MONDATA_DIR/$i/$OVERFLOWN"
+	fi
+
+	IDX=`expr $IDX + 1`
+
+	if [ -f $MONDATA_DIR/$i/$ACTIONN ]; then
+		MONDATA_FILES[IDX]=$MONDATA_DIR/$i/$ACTIONN
+	else
+		echo "File not found: $MONDATA_DIR/$i/$ACTIONN"
+	fi
+done
+
+# exit if no file with monitoring data is found
+if [ ${#MONDATA_FILES[*]} -eq 0 ]; then
+	echo "No files with monitoring data found in $MONDATA_DIR. Exit!"
+	exit 1
+fi
+
+#echo ${MONDATA_FILES[*]}
+
 # main stuff
 while true; do
 
-    # update timestamp
-    TIMESTAMP=`date +%s`
+	# update timestamp
+	TIMESTAMP=`date +%s`
 
-    for i in `seq 1 2`; do
+	# for each timing receiver check if monitoring data is available and send it to Graphite host
+	for MONDATA_FILE in "${MONDATA_FILES[@]}"; do
+		TR_AND_FILE=${MONDATA_FILE#${MONDATA_DIR}/}    # get '1/actionn' from full path
+		TR_NUM=TR${TR_AND_FILE%%/*}                    # get '1' from '1/actionn' and build 'TR1'
+		FILE_NAME=${TR_AND_FILE##*/}                   # get 'actionn' from '1/actionn'
 
-        NOMEN=${TRNOMEN}${i}
+		METRIC_KEY=${TRDATA}.${!TR_NUM}.${FILE_NAME%n} # build 'tr.ZT00ZM01.action'
+		METRIC_VAL=$(tail -1 $MONDATA_FILE)            # read monitoring data
 
-	# get metrics value
-        LATECNT=$(cat $MONDATA/$TRDATA/$i/$LATEN)
-	EARLYCNT=$(cat $MONDATA/$TRDATA/$i/$EARLYN)
-	OVERFLOWCNT=$(cat $MONDATA/$TRDATA/$i/$OVERFLOWN)
-	ACTIONCNT=$(cat $MONDATA/$TRDATA/$i/$ACTIONN)
+		if [ "$METRIC_VAL" != "" ]; then
+			# send metric (metric key, metric value and timestamp) to Graphite
+			echo "$METRIC_KEY $METRIC_VAL $TIMESTAMP" | nc $SERVERIP -u $SERVERPORT
+		fi
+	done
 
-	# send metric key, metric value and timestamp to the Graphite host
-	METRICKEY=$TRDATA.$NOMEN
-
-	echo "$METRICKEY.late $LATECNT $TIMESTAMP" | nc $SERVERIP -u $SERVERPORT
-	echo "$METRICKEY.early $EARLYCNT $TIMESTAMP" | nc $SERVERIP -u $SERVERPORT
-	echo "$METRICKEY.overflow $OVERFLOWCNT $TIMESTAMP" | nc $SERVERIP -u $SERVERPORT
-	echo "$METRICKEY.action $ACTIONCNT $TIMESTAMP" | nc $SERVERIP -u $SERVERPORT
-
-    done
-
-    sleep $INTERVAL
+	sleep $INTERVAL
 done
