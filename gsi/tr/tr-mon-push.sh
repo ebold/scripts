@@ -27,10 +27,9 @@ ACTIONN=actionn
 
 # collect interval
 INTERVAL=30
-COUNT=200
 
 # main stuff
-while [ $COUNT -ne 0 ]; do
+while true; do
 
     # update timestamp
     TIMESTAMP=`date +%s`
@@ -55,8 +54,5 @@ while [ $COUNT -ne 0 ]; do
 
     done
 
-	COUNT=`expr $COUNT - 1`
-	if [ $COUNT -ne 0 ]; then
-	    sleep $INTERVAL
-	fi
+    sleep $INTERVAL
 done
