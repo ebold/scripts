@@ -45,11 +45,13 @@ while [ $COUNT -ne 0 ]; do
 	OVERFLOWCNT=$(cat $MONDATA/$TRDATA/$i/$OVERFLOWN)
 	ACTIONCNT=$(cat $MONDATA/$TRDATA/$i/$ACTIONN)
 
-	# send metric path, metric value and timestamp to the Graphite server
-	echo "$NOMEN.late $LATECNT $TIMESTAMP" | nc $SERVERIP -u $SERVERPORT
-	echo "$NOMEN.early $EARLYCNT $TIMESTAMP" | nc $SERVERIP -u $SERVERPORT
-	echo "$NOMEN.overflow $OVERFLOWCNT $TIMESTAMP" | nc $SERVERIP -u $SERVERPORT
-	echo "$NOMEN.action $ACTIONCNT $TIMESTAMP" | nc $SERVERIP -u $SERVERPORT
+	# send metric key, metric value and timestamp to the Graphite host
+	METRICKEY=$TRDATA.$NOMEN
+
+	echo "$METRICKEY.late $LATECNT $TIMESTAMP" | nc $SERVERIP -u $SERVERPORT
+	echo "$METRICKEY.early $EARLYCNT $TIMESTAMP" | nc $SERVERIP -u $SERVERPORT
+	echo "$METRICKEY.overflow $OVERFLOWCNT $TIMESTAMP" | nc $SERVERIP -u $SERVERPORT
+	echo "$METRICKEY.action $ACTIONCNT $TIMESTAMP" | nc $SERVERIP -u $SERVERPORT
 
     done
 
