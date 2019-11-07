@@ -104,9 +104,11 @@ while true; do
 		# if metric value is available then send it
 		if [ "$METRIC_VAL" != "" ]; then
 
-			TX_RX_FILE=${MONDATA_FILE#${MONDATA_DIR}/}   # get 'd??x/rate*' from full path
-			DL_NAME=${TX_RX_FILE%%?x/*}                  # get 'd?'
-			METRIC_NAME=${TX_RX_FILE##*/}                # get 'rate*'
+			DL_TX_RX_RATE=${MONDATA_FILE#${MONDATA_DIR}/}   # get 'd??x/rate*' from full path
+			DL_TX_RX=${DL_TX_RX_RATE%%/rate*}               # get 'd??x' from 'd??x/rate*
+			DL_NAME=${DL_TX_RX%?x}                          # get 'd?' from 'd??x'
+			TX_RX=${DL_TX_RX#d?}                            # get '?x' from 'd??x'
+			METRIC_NAME=${DL_TX_RX_RATE##*/}                # get 'rate*'
 
 			FILE_PATH=$MONDATA_DIR/${DL_NAME}port        # $MONDATA/d?port
 			if [ -f $FILE_PATH ]; then
@@ -114,7 +116,7 @@ while true; do
 			fi
 
 			# send metric key, metric value and timestamp to the Graphite host
-			METRIC_KEY=${NWDATA}.${CM}.${DL_NAME}.${PORT_NAME}.${METRIC_NAME}  # nw.nwt0013m66.dm.port1.tx.rate10s
+			METRIC_KEY=${NWDATA}.${CM}.${DL_NAME}.${PORT_NAME}.${TX_RX}.${METRIC_NAME}  # nw.nwt0013m66.dm.port1.tx.rate10s
 			echo "$METRIC_KEY $METRIC_VAL $TIMESTAMP" | nc $SERVERIP -u $SERVERPORT
 		fi
 	done
