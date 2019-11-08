@@ -127,11 +127,11 @@ if [ ${#MONDATA_FILES[*]} -eq 0 ]; then
 	echo "No files with monitoring data found in $MONDATA_DIR. Exit!"
 	exit 1
 else
-	echo "Metrics are sent to $SERVERIP:$SERVERPORT every $INTERVAL seconds."
-	echo "File list with metric data:"
+	echo "List of files with monitoring data:"
 	for file in "${MONDATA_FILES[@]}"; do
 		echo $file
 	done
+	echo "Sending monitoring data to $SERVERIP:$SERVERPORT every $INTERVAL seconds."
 fi
 
 # main stuff
