@@ -10,6 +10,14 @@ if [ $# -ne 1 ]; then
 	exit 1
 fi
 
+# load common functions
+COMMON_SCRIPT="push-common.sh"
+if [ -f $COMMON_SCRIPT ]; then
+	source $COMMON_SCRIPT
+else
+	echo "Missing $COMMON_SCRIPT. Exit!"
+fi
+
 # Graphite host IP address and port
 SERVERIP=$1
 SERVERPORT=2003

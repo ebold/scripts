@@ -11,6 +11,14 @@ if [ $# -ne 1 ]; then
 	exit 1
 fi
 
+# load common functions
+COMMON_SCRIPT="push-common.sh"
+if [ -f $COMMON_SCRIPT ]; then
+	source $COMMON_SCRIPT
+else
+	echo "Missing $COMMON_SCRIPT. Exit!"
+fi
+
 # Graphite host and port
 SERVERIP=$1
 SERVERPORT=2003
@@ -175,12 +183,7 @@ while true; do
 
 			# convert WR sync status to numeric value
 			if [ "$METRIC_NAME" == "$STATUS" ]; then
-				case $METRIC_VAL in
-					"TRACKING") NUM_VAL=100;;
-					"NO SYNC")  NUM_VAL=20;;
-					*)  NUM_VAL=0;;
-				esac
-				METRIC_VAL=$NUM_VAL
+				METRIC_VAL=$(get_sync_numeric "$METRIC_VAL")
 			fi
 
 			# send metric key, metric value and timestamp to the Graphite host
