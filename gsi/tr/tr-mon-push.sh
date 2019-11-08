@@ -34,53 +34,38 @@ INTERVAL=30
 # arrays with monitoring data files and metric key
 IDX=0
 MONDATA_FILES=()
+METRIC_KEYS=($LATEN $EARLYN $OVERFLOWN $ACTIONN)
 MONDATA_DIR=$MONDATA/$TRDATA
 
 # check if file with monitoring data exists
-for i in `seq 1 2`; do
+for i in 1 2; do
+	for key in "${METRIC_KEYS[@]}"; do
 
-	# check if file with monitoring data exists
-	if [ -f $MONDATA_DIR/$i/$LATEN ]; then
-		# add file path to a corresponding array
-		MONDATA_FILES[IDX]=$MONDATA_DIR/$i/$LATEN
-	else
-		echo "File not found: $MONDATA_DIR/$i/$LATEN"
-	fi
+		# check if file with monitoring data exists
+		FILE_PATH=$MONDATA_DIR/$i/$key
+		if [ -f $FILE_PATH ]; then
+			# add file path to a corresponding array
+			MONDATA_FILES[IDX]=$FILE_PATH
+		else
+			echo "File not found: $FILE_PATH"
+		fi
 
-	IDX=`expr $IDX + 1`
+		IDX=`expr $IDX + 1`
 
-	if [ -f $MONDATA_DIR/$i/$EARLYN ]; then
-		MONDATA_FILES[IDX]=$MONDATA_DIR/$i/$EARLYN
-	else
-		echo "File not found: $MONDATA_DIR/$i/$EARLYN"
-	fi
-
-	IDX=`expr $IDX + 1`
-
-	if [ -f $MONDATA_DIR/$i/$OVERFLOWN ]; then
-		MONDATA_FILES[IDX]=$MONDATA_DIR/$i/$OVERFLOWN
-	else
-		echo "File not found: $MONDATA_DIR/$i/$OVERFLOWN"
-	fi
-
-	IDX=`expr $IDX + 1`
-
-	if [ -f $MONDATA_DIR/$i/$ACTIONN ]; then
-		MONDATA_FILES[IDX]=$MONDATA_DIR/$i/$ACTIONN
-	else
-		echo "File not found: $MONDATA_DIR/$i/$ACTIONN"
-	fi
-
-	IDX=`expr $IDX + 1`
+	done
 done
 
 # exit if no file with monitoring data is found
 if [ ${#MONDATA_FILES[*]} -eq 0 ]; then
 	echo "No files with monitoring data found in $MONDATA_DIR. Exit!"
 	exit 1
+else
+	echo "List of files with monitoring data:"
+	for file in "${MONDATA_FILES[@]}"; do
+		echo $file
+	done
+	echo "Sending monitoring data to $SERVERIP:$SERVERPORT every $INTERVAL seconds."
 fi
-
-#echo ${MONDATA_FILES[*]}
 
 # main stuff
 while true; do
