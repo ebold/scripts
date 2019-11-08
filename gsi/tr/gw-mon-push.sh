@@ -45,73 +45,25 @@ INTERVAL=30
 IDX=0
 MONDATA_DIR=$MONDATA/$GWDATA
 MONDATA_FILES=()
+METRIC_KEYS=($OFFSET $SYNC $STALLMAX $STALLACT $RATE10S)
 
 # check if files with monitoring data exist
-for i in `seq 0 1 2`; do
+for i in 0 1 2; do
 	GW=GW$i
 	GWNODE=NODEGW$i
 	GW_ARRAY[$i]="${!GW}:${!GWNODE}"
 
-	FILE_PATH=$MONDATA_DIR/${!GW}/$OFFSET
-	if [ -f $FILE_PATH ]; then
-		MONDATA_FILES[IDX]=$FILE_PATH
-	else
-		echo "File not found: $FILE_PATH"
-	fi
+	for key in "${METRIC_KEYS[@]}"; do
+		FILE_PATH=$MONDATA_DIR/${!GW}/$key
+		if [ -f $FILE_PATH ]; then
+			MONDATA_FILES[IDX]=$FILE_PATH
+		else
+			echo "File not found: $FILE_PATH"
+		fi
 
-	IDX=`expr $IDX + 1`
+		IDX=`expr $IDX + 1`
 
-	FILE_PATH=$MONDATA_DIR/${!GW}/$SYNC
-	if [ -f $FILE_PATH ]; then
-		MONDATA_FILES[IDX]=$FILE_PATH
-	else
-		echo "File not found: $FILE_PATH"
-	fi
-
-	IDX=`expr $IDX + 1`
-
-	FILE_PATH=$MONDATA_DIR/${!GW}/$STALLMAX
-	if [ -f $FILE_PATH ]; then
-		MONDATA_FILES[IDX]=$FILE_PATH
-	else
-		echo "File not found: $FILE_PATH"
-	fi
-
-	IDX=`expr $IDX + 1`
-
-	FILE_PATH=$MONDATA_DIR/${!GW}/$STALLACT
-	if [ -f $FILE_PATH ]; then
-		MONDATA_FILES[IDX]=$FILE_PATH
-	else
-		echo "File not found: $FILE_PATH"
-	fi
-
-	IDX=`expr $IDX + 1`
-
-	FILE_PATH=$MONDATA_DIR/${!GW}/$RATE10S
-	if [ -f $FILE_PATH ]; then
-		MONDATA_FILES[IDX]=$FILE_PATH
-	else
-		echo "File not found: $FILE_PATH"
-	fi
-
-	IDX=`expr $IDX + 1`
-
-	FILE_PATH=$MONDATA_DIR/${!GW}/$RATE1M
-	if [ -f $FILE_PATH ]; then
-		MONDATA_FILES[IDX]=$FILE_PATH
-	else
-		echo "File not found: $FILE_PATH"
-	fi
-
-	IDX=`expr $IDX + 1`
-
-	FILE_PATH=$MONDATA_DIR/${!GW}/$RATE1H
-	if [ -f $FILE_PATH ]; then
-		MONDATA_FILES[IDX]=$FILE_PATH
-	else
-		echo "File not found: $FILE_PATH"
-	fi
+	done
 done
 
 # exit here if no file with monitoring data is found
