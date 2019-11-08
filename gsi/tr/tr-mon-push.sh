@@ -70,6 +70,8 @@ for i in `seq 1 2`; do
 	else
 		echo "File not found: $MONDATA_DIR/$i/$ACTIONN"
 	fi
+
+	IDX=`expr $IDX + 1`
 done
 
 # exit if no file with monitoring data is found
