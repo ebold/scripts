@@ -90,14 +90,15 @@ while true; do
 
 	# for each timing receiver check if monitoring data is available and send it to Graphite host
 	for MONDATA_FILE in "${MONDATA_FILES[@]}"; do
-		TR_AND_FILE=${MONDATA_FILE#${MONDATA_DIR}/}    # get '1/actionn' from full path
-		TR_NUM=TR${TR_AND_FILE%%/*}                    # get '1' from '1/actionn' and build 'TR1'
-		FILE_NAME=${TR_AND_FILE##*/}                   # get 'actionn' from '1/actionn'
-
-		METRIC_KEY=${TRDATA}.${!TR_NUM}.${FILE_NAME%n} # build 'tr.ZT00ZM01.action'
 		METRIC_VAL=$(tail -1 $MONDATA_FILE)            # read monitoring data
 
 		if [ "$METRIC_VAL" != "" ]; then
+			# build metric key
+			TR_AND_FILE=${MONDATA_FILE#${MONDATA_DIR}/}    # get '1/actionn' from full path
+			TR_NUM=TR${TR_AND_FILE%%/*}                    # get '1' from '1/actionn' and build 'TR1'
+			FILE_NAME=${TR_AND_FILE##*/}                   # get 'actionn' from '1/actionn'
+			METRIC_KEY=${TRDATA}.${!TR_NUM}.${FILE_NAME%n} # build 'tr.ZT00ZM01.action'
+
 			# send metric (metric key, metric value and timestamp) to Graphite
 			echo "$METRIC_KEY $METRIC_VAL $TIMESTAMP" | nc $SERVERIP -u $SERVERPORT
 		fi
