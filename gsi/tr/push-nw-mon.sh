@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This is an optional script to present the clock master statistics in graphs.
+# This is an optional script used to present the clock master statistics in graphs.
 # It sends packet rate evaluated by clock master (WR switch) to a Graphite
 # host using the UDP protocol.
 

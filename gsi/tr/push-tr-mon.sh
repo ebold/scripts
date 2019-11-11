@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This is an optional script to present the monitoring data in graphs.
+# This is an optional script used to present the monitoring data in graphs.
 # If monitoring data prepared by timing receivers is available it sends the data
 # to a Graphite host using the UDP protocol.
 
