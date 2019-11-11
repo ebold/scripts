@@ -6,7 +6,7 @@
 
 # Check argument
 if [ $# -ne 1 ]; then
-	echo "Usage: $0 server_IP_address"
+	echo "Usage: $0 Graphite_host (host.domain or IP address)"
 	exit 1
 fi
 
