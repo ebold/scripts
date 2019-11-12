@@ -16,6 +16,7 @@ if [ -f $COMMON_SCRIPT ]; then
 	source $COMMON_SCRIPT
 else
 	echo "Missing $COMMON_SCRIPT. Exit!"
+	exit 1
 fi
 
 # Graphite host and port
