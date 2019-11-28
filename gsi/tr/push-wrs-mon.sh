@@ -1,8 +1,9 @@
 #!/bin/bash
 
 # This is an optional script used to present the WR switch statistics in graphs.
-# It calculates the TX and RX frame rate in 30 seconds interval and sends then
-# to a Graphite host using the UDP protocol.
+# It obtains the TX and RX frame count from the given WR switches periodically and
+# either sends the frame count or calculated frame rate to a Graphite host using
+# the UDP protocol.
 
 # Check argument
 if [ $# -ne 1 ]; then
@@ -39,9 +40,12 @@ WRS=icinga/wrs
 MONDATA_DIR=$MONDATA/$WRS
 TMP_FILE=$MONDATA_DIR/wrs_frames
 
-# intervals
-INTERVAL_SEND=30
-INTERVAL_POLL=30
+# polling interval
+INTERVAL=60
+
+# configuration
+FRAME_COUNT_ONLY="yes"    # yes | no
+OPTION="send"             # send | print
 
 # setup
 setup() {
@@ -53,7 +57,7 @@ setup() {
 			echo "Creating directory: $MONDATA_DIR"
 			mkdir -p $MONDATA_DIR
 		fi
-		echo "WR switches under monitoring (TX/RX frame rate):"
+		echo "WR switches under monitoring:"
 		for wrs in "${WRS_ALL[@]}"; do
 			IFS=':' read -r -a wrs_v <<< $wrs
 			# clear existing files with frame counts
@@ -63,7 +67,17 @@ setup() {
 			# print short info
 			echo "wrs=${wrs_v[0]} ip=${wrs_v[1]} net=${wrs_v[2]} layer=${wrs_v[3]}"
 		done
-		echo "Sending TX/RX frame rate to $SERVERIP:$SERVERPORT every $INTERVAL_SEND seconds."
+
+		local WHAT="rate"
+		if [ "$FRAME_COUNT_ONLY" == "yes" ]; then
+			WHAT="count"
+		fi
+
+		if [ "$OPTION" == "send" ]; then
+			echo "Sending TX/RX frame $WHAT to $SERVERIP:$SERVERPORT every $INTERVAL seconds."
+		elif [ "$OPTION" == "print" ]; then
+			echo "Prints TX/RX frame $WHAT every $INTERVAL seconds"
+		fi
 	fi
 }
 
@@ -99,8 +113,77 @@ send_port_stats() {
 	done
 }
 
-# evaluate frame rate and optionally send them to Graphite
-do_almost_all() {
+# get frame count and optionally send them to Graphite
+# Applying 'derivative()' function provided by Graphite
+# TX/RX frame rate can be calculated directly on Grafana.
+handle_frame_count() {
+	for wrs in ${WRS_ALL[@]}; do
+
+		IFS=':' read -r -a wrs_v <<< $wrs
+		WRS_DEV=${wrs_v[0]}
+		WRS_IP_ADDR=${wrs_v[1]}
+		WRS_NETWORK=${wrs_v[2]}
+		WRS_LAYER=${wrs_v[3]}
+
+		# files to store TX/RX frame counts
+		TX_FRAMES=$MONDATA_DIR/${WRS_DEV}_TX_Frames
+		RX_FRAMES=$MONDATA_DIR/${WRS_DEV}_RX_Frames
+
+		for filepath in $TX_FRAMES $RX_FRAMES; do
+
+			# get frame count
+			DIRECTION="XX"
+			if [[ "$filepath" == *"TX"* ]]; then  # match 'TX' in $filepath
+				DIRECTION="TX"
+				OID="WR-SWITCH-MIB::wrsPstatsTXFrames"
+
+			elif [[ "$filepath" == *"RX"* ]]; then
+				DIRECTION="RX"
+				OID="WR-SWITCH-MIB::wrsPstatsRXFrames"
+			else
+				echo "nor TX neither RX!"
+				continue
+			fi
+
+			# send SNMP query
+			ts=$(date +%s)
+			snmpwalk $SNMP_OPTIONS $WRS_IP_ADDR $OID > $TMP_FILE
+
+			local CURRENT=()
+			local IDX=0
+			echo -n "" > $filepath
+
+			# filter SNMP reply and save it to $filepath
+			if [ -f $TMP_FILE ]; then
+				# set metric prefix: wrs.network.layer.device
+				local METRIC_PREFIX="wrs.${WRS_NETWORK}.${WRS_LAYER}.${WRS_DEV}"
+				while IFS= read -r line; do          # line: WR-SWITCH-MIB::wrsPstatsRXFrames.1 0
+					if [ "$line" != "" ]; then
+						CURRENT[$IDX]="${line##*.}"      # get 'port frames' part from the line
+						echo "${CURRENT[$IDX]}" >> $filepath
+
+						IFS=' ' read -r -a curr_v <<< "${CURRENT[$IDX]}"
+						# set metric key: wrs.network.layer.device.port.direction
+						local METRIC_KEY="${METRIC_PREFIX}.${curr_v[0]}.${DIRECTION}"
+
+						if [ "$1" == "send" ]; then 		# send metric to Graphite host
+							echo "$METRIC_KEY ${curr_v[1]} $ts" | nc $SERVERIP -u $SERVERPORT
+						elif [ "$1" == "print" ]; then 	# output for debug
+							echo "$METRIC_KEY ${curr_v[1]} $ts"
+						fi
+
+						IDX=`expr $IDX + 1`
+					fi
+				done < $TMP_FILE
+				#echo "CURRENT: ${CURRENT[@]}"
+			fi
+
+		done
+	done
+}
+
+# calculate frame rate from frame count and optionally send them to Graphite
+calc_frame_rate() {
 	for wrs in ${WRS_ALL[@]}; do
 
 		IFS=':' read -r -a wrs_v <<< $wrs
@@ -132,7 +215,7 @@ do_almost_all() {
 
 			# get frame count
 			DIRECTION="XX"
-			if [[ "$filepath" == *"TX"* ]]; then # numerical position of 1st character of $TX_FRAMES in $filepath (0 if no match)
+			if [[ "$filepath" == *"TX"* ]]; then # check match 'TX' in $filepath
 				DIRECTION="TX"
 				OID="WR-SWITCH-MIB::wrsPstatsTXFrames"
 
@@ -186,7 +269,7 @@ do_almost_all() {
 							# send metric to Graphite host
 							echo "$METRIC_KEY $rate $ts" | nc $SERVERIP -u $SERVERPORT
 						fi
-					elif [ "$1" == "test" ]; then
+					elif [ "$1" == "print" ]; then
 						# output for debug
 						echo "$METRIC_KEY $rate $ts"
 					fi
@@ -198,7 +281,7 @@ do_almost_all() {
 				if [ ${#RATES[@]} -ne 0 ]; then
 					#echo "${RATES[@]}"
 					# frame rate is stored in nwt01234m66_TX_30s_Rates file
-					RATE_FILE=$MONDATA_DIR/${WRS_DEV}_${DIRECTION}_${INTERVAL_POLL}s_Rates
+					RATE_FILE=$MONDATA_DIR/${WRS_DEV}_${DIRECTION}_${INTERVAL}s_Rates
 					echo -n "" > $RATE_FILE
 					for rate in ${RATES[@]}; do
 						echo "$rate" >> $RATE_FILE
@@ -221,10 +304,14 @@ setup
 
 while true; do
 
-	# do all (required argument: send | test)
-	do_almost_all "send"
+	if [ "$FRAME_COUNT_ONLY" == "yes" ]; then # use frame counts as port statistics
+		handle_frame_count $OPTION
+	else                                             # use frame rates as port statistics
+		# calculate frame rate (and optionally 'send' or 'print' it)
+		calc_frame_rate $OPTION
+	fi
 
 	# make pause
-	sleep $INTERVAL_SEND
+	sleep $INTERVAL
 
 done
