@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This is an optional script used to present the UNILAC statistics in graphs.
-# It sends monitoring data evaluated by scuxl0183 and nwt0122m66 to a Graphite
+# It sends monitoring data evaluated by scuxl0183 and nwt0285m66 to a Graphite
 # host using the UDP protocol.
 
 # Check argument
@@ -24,7 +24,7 @@ SERVERIP=$1
 SERVERPORT=2003
 
 # device name
-WRSL1=nwt0122m66
+WRSL1=nwt0285m66
 PZ=scuxl0183
 
 # directory with monitoring data
