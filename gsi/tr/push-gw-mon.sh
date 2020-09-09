@@ -16,17 +16,11 @@ if [ -f $COMMON_SCRIPT ]; then
 	source $COMMON_SCRIPT
 else
 	echo "Missing $COMMON_SCRIPT. Exit!"
-	exit 1
 fi
 
 # Graphite host IP address and port
 SERVERIP=$1
 SERVERPORT=2003
-
-# device name (used as metric path)
-NODEGW0=scuxl0223
-NODEGW1=scuxl0228
-NODEGW2=scuxl0068
 
 # directory with monitoring data
 MONDATA=/common/usr/timing/htdocs/cgi-bin/admin/data
