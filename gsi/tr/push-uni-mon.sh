@@ -24,8 +24,8 @@ SERVERIP=$1
 SERVERPORT=2003
 
 # device name
-WRSL1=nwt0285m66
-PZ=scuxl0183
+LM_NAME="" # get the name of the localmaster WRS from 'wrs' file
+PZ="" # get the name of the Pulszentrale node from 'unipz' file
 
 # directory with monitoring data
 MONDATA=/common/usr/timing/htdocs/cgi-bin/admin/data
@@ -70,6 +70,17 @@ MONDATA_FILES=()
 
 # get files with pulsezentrale monitoring data
 MONDATA_DIR=$MONDATA/$UNIPZDATA
+
+# get the name of the Pulszentrale node
+FILE_PATH=$MONDATA_DIR/unipz
+if [ -f $FILE_PATH ]; then
+    full_name=$(cat $FILE_PATH) # scuxl0183.acc.gsi.de
+    PZ=${full_name%%.*}    # scuxl0183
+else
+    echo "Could not get the name of the Pulszentrale node from file: $FILE_PATH"
+    exit 1
+fi
+
 for file in "${PZ_FILES[@]}"; do
 
 		FILE_PATH=$MONDATA_DIR/$file
@@ -84,6 +95,17 @@ done
 
 # get files with network monitoring data
 MONDATA_DIR=$MONDATA/$UNINWDATA
+
+# get the name of the localmaster WRS
+FILE_PATH=$MONDATA_DIR/wrs
+if [ -f $FILE_PATH ]; then
+    full_name=$(cat $FILE_PATH) # nwt0285m66.timing.acc.gsi.de
+    LM_NAME=${full_name%%.*}    # nwt0285m66
+else
+    echo "Could not get the name of the localmaster WRS from file: $FILE_PATH"
+    exit 1
+fi
+
 for port in 0 1 2 3; do
 
 	TX_SUBDIR=D${port}TXDATA
@@ -147,7 +169,7 @@ while true; do
 				fi
 
 				# send metric key, metric value and timestamp to the Graphite host
-				METRIC_KEY=uni.nw.${WRSL1}.${DL_NAME}.${PORT_NAME}.${TX_RX}.${METRIC_NAME}  # uni.nw.nwt0122m66.dm.port1.tx.rate10s
+				METRIC_KEY=uni.nw.${LM_NAME}.${DL_NAME}.${PORT_NAME}.${TX_RX}.${METRIC_NAME}  # uni.nw.nwt0122m66.dm.port1.tx.rate10s
 				echo "$METRIC_KEY $METRIC_VAL $TIMESTAMP" | nc $SERVERIP -u $SERVERPORT
 
 			elif [ "${REL_PATH:0:${#UNIPZDATA}}" == "$UNIPZDATA" ]; then # head with $UNIPZDATA directory
