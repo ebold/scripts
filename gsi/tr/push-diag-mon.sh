@@ -8,6 +8,7 @@
 # Check argument
 if [ $# -ne 1 ]; then
 	echo "Usage: $0 Graphite_host (host.domain or IP address)"
+        echo "e.g., nohup /full/path/to/script tslxxx.domain &"
 	exit 1
 fi
 
@@ -25,14 +26,16 @@ SERVERIP=$1
 SERVERPORT=2003
 
 # device name (used in metric path)
-LAYER1SCU="PRO.1.scuxl0338"
-LAYER2SCU="PRO.2.scuxl0302"
-LAYER3SCU="PRO.3.scuxl0283"
-LAYER4SCU="INT.2.scuxl0404"
-LAYER5SCU="INT.3.scuxl0363"
-LAYER6SCU="DEV.2.scuxl0390"
-LAYER7SCU="DEV.3.scuxl0382"
-LAYER8SCU="UNI.1.scuxl0175"
+LAYERSCU1="PRO.1.scuxl0338"
+LAYERSCU2="PRO.2.scuxl0302"
+LAYERSCU3="PRO.3.scuxl0283"
+LAYERSCU4="INT.2.scuxl0404"
+LAYERSCU5="INT.3.scuxl0363"
+LAYERSCU6="DEV.2.scuxl0390"
+LAYERSCU7="DEV.3.scuxl0382"
+LAYERSCU8="UNI.2.scuxl0187"
+LAYERSCU9="UNI.3.scuxl0257"
+LAYERSCU10="UNI.4.scuxl0359"
 
 # directories with monitoring data
 MONDATA=/common/usr/timing/htdocs/cgi-bin/admin/data
@@ -48,9 +51,10 @@ SYNC=synch    # WR sync status
 OFFST=offst   # diff between TAI and UTC
 
 DIAGS=($DTMAX $DTMIN $DTAVE $NMESS $NLATE $SYNC $OFFST)
-LAYERS=(l1 l2 l3 l4 l5 l6 l7 l8)
-SCUS=($LAYER1SCU $LAYER2SCU $LAYER3SCU $LAYER4SCU \
-	$LAYER5SCU $LAYER6SCU $LAYER7SCU $LAYER8SCU)
+LAYERS=(l1 l2 l3 l4 l5 l6 l7 l8 l9 l10)
+SCUS=($LAYERSCU1 $LAYERSCU2 $LAYERSCU3 $LAYERSCU4 \
+	$LAYERSCU5 $LAYERSCU6 $LAYERSCU7 $LAYERSCU8 \
+	$LAYERSCU9 $LAYERSCU10)
 
 # polling interval
 INTERVAL=30
@@ -84,7 +88,7 @@ else
 	for file in "${MONDATA_FILES[@]}"; do
 		echo $file
 	done
-	echo "Sending monitoring data to $SERVERIP:$SERVERPORT every $INTERVAL seconds."
+	echo "$(date): Started sending monitoring data to $SERVERIP:$SERVERPORT every $INTERVAL seconds."
 fi
 
 # main stuff
@@ -103,8 +107,8 @@ while true; do
 		if [ "$METRIC_VAL" != "" ]; then
 
 			LAYER_DIAG=${MONDATA_FILE#${MONDATA_DIR}/}   # get 'l1dtmax' from full path
-			METRIC_NAME=${LAYER_DIAG:2}                  # get 'dtmax' from 'l1dtmax'
-			LAYER_NUM=${LAYER_DIAG:1:1}                  # get '1' from 'l1dtmax'
+			LAYER_NUM=${LAYER_DIAG//[!0-9]/}             # get '1' from 'l1dtmax'
+			METRIC_NAME=${LAYER_DIAG#*$LAYER_NUM}        # get 'dtmax' from 'l1dtmax'
 
 			# check layer number
 			if [ "$LAYER_NUM" != "" ]; then
