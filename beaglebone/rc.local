@@ -1,0 +1,21 @@
+#!/bin/bash -e
+#
+# rc.local
+#
+# Location: /etc/rc.local
+#
+# This script is executed when system is in the multiuser runlevel.
+# Make sure that the script returns 0 on success or any other
+# value on error.
+#
+# In order to enable or disable this script just change the execution
+# permission.
+
+
+# Make a log entry in syslog
+logger -t rc-local Started rc-local service
+
+# Launch an user script to turn off all user LEDs
+/opt/scripts/tools/leds.sh
+
+exit 0
