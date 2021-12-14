@@ -2,7 +2,9 @@
 
 # back up the '/home' directory incrementally to an external disk
 
-# credit: https://snapshooter.com/learn/linux/incremental-tar
+# credit:
+# https://snapshooter.com/learn/linux/incremental-tar
+# https://help.ubuntu.com/community/BackupYourSystem/TAR
 
 host=$(hostname)
 src_path="/home"

@@ -2,6 +2,8 @@
 
 # back up the '/timeshift' directory to an external disk
 
+# source: https://help.ubuntu.com/community/BackupYourSystem/TAR
+
 today=$(date +%Y%m%d)
 host=$(hostname)
 ext_drive="/media/$USER/backup_t500"
