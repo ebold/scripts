@@ -1,0 +1,17 @@
+# /etc/systemd/system/leds_off.service
+
+# Deployment
+# cd /etc/systemd/system/
+# sudo wget <github/rawfile/path>
+# sudo systemctl enable leds_off.service
+
+[Unit]
+Description=Turn off all on-board LEDs
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/leds_off.sh
+TimeoutSec=0
+
+[Install]
+WantedBy=multi-user.target
