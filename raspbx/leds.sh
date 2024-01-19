@@ -1,11 +1,13 @@
 #!/bin/sh
 
-# This script turns off all on-board LEDs
+# This script turns off all on-board LEDs after successful boot
 
-# Installation in Linux raspbx 3.14.37-ti-r57 (as <root>@<raspbx>)
-# scp leds.sh /opt/scripts/tools/
+# Installation in 'Linux BeagleBone 5.10.168-ti-r75'
+# cd /opt/scripts/tools
+# sudo wget https://raw.githubusercontent.com/ebold/scripts/master/raspbx/leds.sh
+# sudo chmod +x leds.sh
 # cd /etc/rcS.d/
-# ln -s /opt/scripts/tools/leds.sh S99leds
+# sudo ln -s /opt/scripts/tools/leds.sh S99leds
 
 # Path to LED device
 path_to_led="/sys/class/leds/beaglebone:green:usr"

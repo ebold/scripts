@@ -1,3 +1,6 @@
+# Deployment
+# cd /etc/systemd/system/
+# sudo wget https://raw.githubusercontent.com/ebold/scripts/master/beaglebone/rc-local.service
 [Unit]
 Description=Run old /etc/rc.local script
 ConditionPathExists=/etc/rc.local

@@ -1,13 +1,13 @@
 #!/bin/bash -e
-#
-# rc.local
-#
-# Location: /etc/rc.local
-#
+
+# Deployment:
+# cd /etc
+# sudo wget https://raw.githubusercontent.com/ebold/scripts/master/beaglebone/rc.local
+# sudo chmod +x rc.local
+
 # This script is executed when system is in the multiuser runlevel.
 # Make sure that the script returns 0 on success or any other
 # value on error.
-#
 # In order to enable or disable this script just change the execution
 # permission.
 
