@@ -1,4 +1,4 @@
-Unit]
+[Unit]
 Description=Run old /etc/rc.local script
 ConditionPathExists=/etc/rc.local
 
